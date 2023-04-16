@@ -1,1 +1,1 @@
-# SimpleLog
+# Simple log for embedded devices
