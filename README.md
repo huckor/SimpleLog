@@ -23,9 +23,24 @@ Easy to include it in any of your C++ projects because it contains only one clas
 
 1. Add [SimpleLog.cpp](https://github.com/huckor/SimpleLog/blob/main/src/SimpleLog.cpp) and [SimpleLog.h](https://github.com/huckor/SimpleLog/blob/main/src/SimpleLog.h) into your project.
 
-2. Logging class is considered as global object used as singleton so you need to first create it. In your main.cpp file define SimpleLog global object and in your main function create it's instance.
+2. Logging class is considered as global object used as singleton so you need to first create it. Define SimpleLog global object in your main.cpp file and create it's instance in main function. This object is extended in [SimpleLog.h](https://github.com/huckor/SimpleLog/blob/main/src/SimpleLog.h) file.
+```cpp
+#include "SimpleLog.h"
 
-3. Now you can log using predefined macros inside [SimpleLog.h](https://github.com/huckor/SimpleLog/blob/main/src/SimpleLog.h). Anywhere where you include [SimpleLog.h](https://github.com/huckor/SimpleLog/blob/main/src/SimpleLog.h) file you will be able to use it.
+SimpleLog *__LOG;
+
+int main(int argc, const char * argv[]) {
+    __LOG = new SimpleLog();
+    __LOG->Create(LOG_TO_STDERR);
+    
+    //At this point you can use simple log
+    
+    delete __LOG;
+    return 0;
+}
+```
+
+3. Now you can log using predefined macros inside [SimpleLog.h](https://github.com/huckor/SimpleLog/blob/main/src/SimpleLog.h) file anywhere you include it.
 
 ### Example with log to stderr
 ```cpp
@@ -64,6 +79,16 @@ int main(int argc, const char * argv[]) {
     LOG_F("Some fatal log output text");
     delete __LOG;
     return 0;
+}
+```
+
+### Example of logging in different file than main.cpp
+```cpp
+#include "DifferentFile.h"
+#include "SimpleLog.h"
+
+void Foo() {
+    LOG_T("Some trace log output from Foo");
 }
 ```
 
