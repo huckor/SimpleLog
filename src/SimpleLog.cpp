@@ -9,21 +9,28 @@
 #endif
 #include <ctime>
 
-#define LOG_EVERYTHING 0xFFFF
-
 SimpleLog::SimpleLog() {
-    _LogLevel = LOG_EVERYTHING;
+    _LogLevel = LOG_ALL;
     _LogFile = NULL;
+    _LogLevelStr[LOG_TRACE]     = "T";
+    _LogLevelStr[LOG_DEBUG]     = "D";
+    _LogLevelStr[LOG_INFO]      = "I";
+    _LogLevelStr[LOG_WARNING]   = "W";
+    _LogLevelStr[LOG_ERROR]     = "E";
+    _LogLevelStr[LOG_FATAL]     = "F";
 }
 
 SimpleLog::~SimpleLog() {
-    if (_LogFile != NULL && _LogFile != stderr) {
+    if (_LogFile != NULL 
+            && _LogFile != stderr) 
+    {
         fclose(_LogFile);
+        _LogFile = NULL;
     }
 }
 
-bool SimpleLog::Create(std::string FileName) {
-    if (FileName.compare("stderr") == 0) {
+bool SimpleLog::Create(const std::string &FileName) {
+    if (FileName.compare(LOG_TO_STDERR) == 0) {
         _LogFile = stderr;
         return true;
     }
@@ -33,47 +40,42 @@ bool SimpleLog::Create(std::string FileName) {
     return true;
 }
 
-void SimpleLog::Write(unsigned int LogLevel, std::string Text, std::string CppFile, int CppLine) { 
+void SimpleLog::Write(const unsigned char &LogLevel, const std::string &Text, const std::string &CppFile, const int &CppLine) { 
+    std::string Header;
+    GetFormattedHeader(CppFile, CppLine, &Header);
     if (_LogLevel & LogLevel) {
-        fprintf(_LogFile, "%s (%s) - %s\n", GetDateTime().c_str(), GetFileAndLine(CppFile, CppLine).c_str(), Text.c_str());
+        fprintf(_LogFile, "%s %s: %s\n", Header.c_str(), _LogLevelStr[LogLevel].c_str(), Text.c_str());
         fflush(_LogFile);
     }
 }
 
-void SimpleLog::SetLogLevel(unsigned int LogLevel) {
+void SimpleLog::SetLogLevel(const unsigned char &LogLevel) {
     _LogLevel = LogLevel;
 }
 
-std::string SimpleLog::GetFileAndLine(std::string Path, int Line) {
-    std::string Result;
-    size_t Found = Path.find_last_of("/\\");
-    if (Found != std::string::npos) {
-        Path = Path.substr(Found + 1);
-        Path += ":" + IntToStr(Line);
-    }
-    return Path;
-}
-
-std::string SimpleLog::IntToStr(int Number) {
-    char Buffer[15];
-    sprintf(Buffer, "%i", Number);
-    return std::string(Buffer);
-}
-
-std::string SimpleLog::GetDateTime() {
-    char Result[50];
+void SimpleLog::GetFormattedHeader(const std::string &Path, const int &Line, std::string *Out) {
+    //Format date and time
+    char DateTime[25] = {0x00};
 #ifndef WIN32
     struct tm tm_time;
     time_t tm;
     time(&tm);
     memcpy(&tm_time, localtime(&tm), sizeof(tm_time));
-    snprintf(Result, 50, "[%02i.%02i.%02i %02i:%02i:%02i]", tm_time.tm_mday, tm_time.tm_mon + 1,
+    snprintf(DateTime, sizeof(DateTime), "%02i.%02i.%02i %02i:%02i:%02i", tm_time.tm_mday, tm_time.tm_mon + 1,
             tm_time.tm_year + 1900, tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
 #else
     SYSTEMTIME SysTime;
     GetLocalTime(&SysTime);
-    _snprintf(Result, 50, "[%02i.%02i.%02i %02i:%02i:%02i]", SysTime.wDay, SysTime.wMonth, 
+    _snprintf(DateTime, sizeof(DateTime), "%02i.%02i.%02i %02i:%02i:%02i", SysTime.wDay, SysTime.wMonth, 
               SysTime.wYear, SysTime.wHour, SysTime.wMinute, SysTime.wSecond);
 #endif
-    return std::string(Result);
+    //Format source code file and source code line
+    char StrLine[15] = {0x00};
+    snprintf(StrLine, sizeof(StrLine), "%i", Line);
+    size_t Position = Path.find_last_of("/\\");
+    if (Position != std::string::npos) {
+        *Out = std::string(DateTime) + " " + Path.substr(Position + 1) + ":" + StrLine;
+    } else {
+        *Out = std::string(DateTime) + " " + Path + ":" + StrLine;
+    }
 }

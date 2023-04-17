@@ -8,99 +8,121 @@ SimpleLog *__LOG;
 
 int main(int argc, const char * argv[]) {
     short TestNo = 0;
+#ifndef WIN32
+    const std::string Passed = "\x1b[32m PASSED \x1b[0m";
+    const std::string Failed = "\x1b[31m !!!FAILED!!! \x1b[0m";
+#else
+    const std::string Passed = " PASSED ";
+    const std::string Failed = " !!!FAILED!!! ";
+#endif
+    const std::string LogFile = "log.txt";
+    std::fstream File;
+    std::string Tmp, FileContent;
 
+    __LOG = new SimpleLog();
+    
     std::cout << "*********************************************************" << std::endl;
     std::cout << "Test " << ++TestNo << ": Open stderr as log channel" << std::endl;
     std::cout << "*********************************************************" << std::endl;
-    __LOG = new SimpleLog();
-    if(__LOG->Create("stderr")) {
-        std::cout << "Test " << TestNo << " - PASSED" << std::endl;
+    if(__LOG->Create(LOG_TO_STDERR)) {
+        std::cout << "Test " << TestNo << " - " << Passed << std::endl;
     } else {
-        std::cout << "Test " << TestNo << " - !!!FAILED!!!" << std::endl;
+        std::cout << "Test " << TestNo << " - " << Failed << std::endl;
     }
-    delete __LOG;
     std::cout << std::endl;
     
     std::cout << "*********************************************************" << std::endl;
     std::cout << "Test " << ++TestNo << ": Log 'SOME TEXT' to stderr log channel"  << std::endl;
     std::cout << "*********************************************************" << std::endl;
-    __LOG = new SimpleLog();
-    if(__LOG->Create("stderr")) {
-        LOG(DEBUG, "SOME TEXT");
-        std::cout << "Test " << TestNo << " - if you can see 'SOME TEXT' in your console then this test PASSED" << std::endl;
-    } else {
-        std::cout << "Test " << TestNo << " - !!!FAILED!!!" << std::endl;
-    }
-    delete __LOG;
+    LOG_D("SOME TEXT");
+    std::cout << "Test " << TestNo << " - if you can see 'SOME TEXT' in your console then this test " << Passed << std::endl;
 	std::cout << std::endl;
 
-    std::cout << "*********************************************************" << std::endl;
-    std::cout << "Test " << ++TestNo << ": Open log.txt file as log channel"  << std::endl;
-    std::cout << "*********************************************************" << std::endl;
+    delete __LOG;
+
+
     __LOG = new SimpleLog();
-    if(__LOG->Create("log.txt")) {
-        if (FILE *File = fopen("log.txt", "r")) {
+
+    std::cout << "*********************************************************" << std::endl;
+    std::cout << "Test " << ++TestNo << ": Open " << LogFile << " file as log channel"  << std::endl;
+    std::cout << "*********************************************************" << std::endl;
+    if(__LOG->Create(LogFile)) {
+        if (FILE *File = fopen(LogFile.c_str(), "r")) {
             fclose(File);
-            std::cout << "Test " << TestNo << " - PASSED" << std::endl;
+            std::cout << "Test " << TestNo << " - " << Passed << std::endl;
         } else {
-            std::cout << "Test " << TestNo << " - !!!FAILED!!!" << std::endl;
+            std::cout << "Test " << TestNo << " - " << Failed << std::endl;
         }
     } else {
-        std::cout << "Test " << TestNo << " - !!!FAILED!!!" << std::endl;
+        std::cout << "Test " << TestNo << " - " << Failed << std::endl;
     }
-    delete __LOG;
 	std::cout << std::endl;
 
-    //Delete old log file
-    remove("log.txt");
-
     std::cout << "*********************************************************" << std::endl;
-    std::cout << "Test " << ++TestNo << ": Log 'SOME TEXT' to log.txt log channel"  << std::endl;
+    std::cout << "Test " << ++TestNo << ": Log 'SOME TEXT' into " << LogFile << " log channel"  << std::endl;
     std::cout << "*********************************************************" << std::endl;
-    __LOG = new SimpleLog();
-    if(__LOG->Create("log.txt")) {
-        LOG(DEBUG, "SOME TEXT");
-        std::fstream File;
-        File.open("log.txt", std::ios::in);
-        std::string tmp;
-        getline(File, tmp);
-        if (tmp.find("SOME TEXT") != std::string::npos) {
-            std::cout << "Test " << TestNo << " - PASSED" << std::endl;   
-        } else {
-            std::cout << "Test " << TestNo << " - !!!FAILED!!!" << std::endl;
-        }
+    LOG_D("SOME TEXT");
+    File.open(LogFile, std::ios::in);
+    while(getline(File, Tmp)){
+        FileContent += Tmp;
+    }
+    if (FileContent.find("SOME TEXT") != std::string::npos) {
+        std::cout << "Test " << TestNo << " - " << Passed << std::endl;   
     } else {
-        std::cout << "Test " << TestNo << " - !!!FAILED!!!" << std::endl;
+        std::cout << "Test " << TestNo << " - " << Failed << std::endl;
     }
-    delete __LOG;
+    File.close();
+    File.open(LogFile, std::ios::out);
+    File.close();
+    FileContent.clear();
 	std::cout << std::endl;
 
-    //Delete old log file
-    remove("log.txt");
+    std::cout << "*********************************************************" << std::endl;
+    std::cout << "Test " << ++TestNo << ": Usage of ALL log level"  << std::endl;
+    std::cout << "*********************************************************" << std::endl;
+    __LOG->SetLogLevel(LOG_ALL);
+    LOG_D("DEBUG TEXT");
+    LOG_I("INFO TEXT");
+    File.open(LogFile, std::ios::in);
+    while(getline(File, Tmp)){
+        FileContent += Tmp;
+    }
+    if (FileContent.find("DEBUG TEXT") != std::string::npos
+            && FileContent.find("INFO TEXT") != std::string::npos) {
+        std::cout << "Test " << TestNo << " - " << Passed << std::endl;   
+    } else {
+        std::cout << "Test " << TestNo << " - " << Failed << std::endl;
+    }
+    File.close();
+    File.open(LogFile, std::ios::out);
+    File.close();
+    FileContent.clear();
+	std::cout << std::endl;
 
     std::cout << "*********************************************************" << std::endl;
     std::cout << "Test " << ++TestNo << ": Usage of DEBUG log level"  << std::endl;
     std::cout << "*********************************************************" << std::endl;
-    __LOG = new SimpleLog();
-    if(__LOG->Create("log.txt")) {
-        __LOG->SetLogLevel(DEBUG);
-        LOG(DEBUG, "DEBUG TEXT");
-        LOG(INFO, "INFO TEXT");
-        std::fstream File;
-        File.open("log.txt", std::ios::in);
-        std::string tmp;
-        getline(File, tmp);
-        if (tmp.find("DEBUG TEXT") != std::string::npos
-            && tmp.find("INFO TEXT") == std::string::npos) {
-            std::cout << "Test " << TestNo << " - PASSED" << std::endl;   
-        } else {
-            std::cout << "Test " << TestNo << " - !!!FAILED!!!" << std::endl;
-        }
-    } else {
-        std::cout << "Test " << TestNo << " - !!!FAILED!!!" << std::endl;
+    __LOG->SetLogLevel(LOG_DEBUG);
+    LOG_D("DEBUG TEXT");
+    LOG_I("INFO TEXT");
+    File.open(LogFile, std::ios::in);
+    while(getline(File, Tmp)){
+        FileContent += Tmp;
     }
-    delete __LOG;
+    if (FileContent.find("DEBUG TEXT") != std::string::npos
+            && FileContent.find("INFO TEXT") == std::string::npos) {
+        std::cout << "Test " << TestNo << " - " << Passed << std::endl;   
+    } else {
+        std::cout << "Test " << TestNo << " - " << Failed << std::endl;
+    }
+    File.close();
+    File.open(LogFile, std::ios::out);
+    File.close();
+    FileContent.clear();
 	std::cout << std::endl;
     
+    remove(LogFile.c_str());
+    delete __LOG;
+
     return 0;
 }

@@ -3,28 +3,39 @@
 
 #include <string>
 #include <stdio.h>
+#include <map>
 
-#define DEBUG            0x00000001
-#define INFO             0x00000002
-#define WARNING          0x00000004
+#define LOG_TO_STDERR   "stderr"
 
-#define LOG(Level, Message) __LOG->Write(Level, Message, std::string(__FILE__), __LINE__)
+#define LOG_TRACE       0x01
+#define LOG_DEBUG       0x02
+#define LOG_INFO        0x04
+#define LOG_WARNING     0x08
+#define LOG_ERROR       0x10
+#define LOG_FATAL       0x20
+#define LOG_ALL         0xFF
+
+#define LOG_T(Message) __LOG->Write(LOG_TRACE, Message, std::string(__FILE__), __LINE__)
+#define LOG_D(Message) __LOG->Write(LOG_DEBUG, Message, std::string(__FILE__), __LINE__)
+#define LOG_I(Message) __LOG->Write(LOG_INFO, Message, std::string(__FILE__), __LINE__)
+#define LOG_W(Message) __LOG->Write(LOG_WARNING, Message, std::string(__FILE__), __LINE__)
+#define LOG_E(Message) __LOG->Write(LOG_ERROR, Message, std::string(__FILE__), __LINE__)
+#define LOG_F(Message) __LOG->Write(LOG_FATAL, Message, std::string(__FILE__), __LINE__)
 
 class SimpleLog
 {
 public:
     SimpleLog();
     ~SimpleLog();
-    bool Create(std::string FileName);
-    void Write(unsigned int LogLevel, std::string Text, std::string CppFile, int CppLine);
-    void SetLogLevel(unsigned int LogLevel);
+    bool Create(const std::string &FileName);
+    void Write(const unsigned char &LogLevel, const std::string &Text, const std::string &CppFile, const int &CppLine);
+    void SetLogLevel(const unsigned char &LogLevel);
 private:
     FILE *_LogFile;
-    unsigned long _LogLevel;
+    unsigned char _LogLevel;
+    std::map<unsigned int, std::string> _LogLevelStr;
 
-    std::string GetFileAndLine(std::string Path, int Line);
-    std::string IntToStr(int Number);
-    std::string GetDateTime();
+    void GetFormattedHeader(const std::string &Path, const int &Line, std::string *Out);
 };
 
 extern SimpleLog *__LOG;
