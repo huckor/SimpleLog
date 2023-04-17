@@ -9,7 +9,7 @@ A simple logging library implemented in C++98 supporting Linux, MacOS and Window
 5. Set log level
 
 ## Output
-Call of LOG_D function with string parameter
+Call of LOG_D, LOG_W and LOG_T functions with string parameter
 ```cpp
 LOG_D("Some debug log output text");
 LOG_W("Some warning log output text");
@@ -19,8 +19,8 @@ LOG_T("Some trace log output text");
 will result into output like this
 ```
 17.04.2023 12:17:49 main.cpp:37 D: Some debug log output text
-17.04.2023 12:17:49 main.cpp:37 D: Some warning log output text
-17.04.2023 12:17:49 main.cpp:37 D: Some trace log output text
+17.04.2023 12:17:49 main.cpp:37 W: Some warning log output text
+17.04.2023 12:17:49 main.cpp:37 T: Some trace log output text
 ```
 
 ## Usage
@@ -115,8 +115,11 @@ int main(int argc, const char * argv[]) {
 
 
 ## How to contribute
-There is a Visual Studio Code project inside .vscode folder which supports C++ intellisense and debugging.
-Feel free to fix any issue you find or add new features if you like to. Follow instructions from [GitHub Contributing](https://gist.github.com/MarcDiethelm/7303312) to know how to contribute.
+This project contains an Visual Studio Code project which supports C++ intellisense and debugging. Open this folder in Visual Studio Code to edit source code and run unit tests.
+
+Feel free to fix any issue you find or add new features if you like to. Follow instructions from [GitHub Contributing](https://gist.github.com/MarcDiethelm/7303312) to know how to contribute. 
+
+Or (not sure this will works :shrug:) create new branch from main then do your changes and then create PR.
 
 
 ## In case you like this project
